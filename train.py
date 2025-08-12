@@ -9,10 +9,10 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 from models.AC_MambaSeg import AC_MambaSeg
 
-# --- 1. Détection sécurisée de Colab ---
+
 IN_COLAB = 'google.colab' in sys.modules
 
-# --- 2. Monter Google Drive si Colab ---
+
 if IN_COLAB:
     from google.colab import drive
     drive.mount('/content/drive')
@@ -20,7 +20,7 @@ if IN_COLAB:
 else:
     SAVE_DIR = ""
 
-# Créer le dossier s’il n’existe pas
+
 os.makedirs(SAVE_DIR, exist_ok=True)
 
 
@@ -106,5 +106,6 @@ print(f" Test data saved to {test_save_path}")
 final_model_path = os.path.join(SAVE_DIR, "final_model.ckpt")
 trainer.save_checkpoint(final_model_path)
 print(f"Full model saved to {final_model_path}")
+
 
 
