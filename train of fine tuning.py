@@ -13,34 +13,33 @@ from collections import OrderedDict
 
 
 
-# --- 1. Détection sécurisée de Colab ---
+
 IN_COLAB = 'google.colab' in sys.modules
 
 
-# --- 2. Monter Google Drive si Colab ---
+
 if IN_COLAB:
     from google.colab import drive
     drive.mount('/content/drive')
-    SAVE_DIR = "/content/drive/MyDrive/event"
+    SAVE_DIR = ""
 else:
-    SAVE_DIR = "/content/drive/MyDrive/event"
+    SAVE_DIR = ""
 
 
 os.makedirs(SAVE_DIR, exist_ok=True)
 
 
-# --- 3. Chargement des données ---
 DATA_PATH = '/content/dataset.npz'
 data = np.load(DATA_PATH)
 x, y = data["images"], data["masks"]
 
 
-# --- 4. Split du dataset ---
+
 x_trainval, x_test, y_trainval, y_test = train_test_split(x, y, test_size=0.2, random_state=42, shuffle=True)
 x_train, x_val, y_train, y_val = train_test_split(x_trainval, y_trainval, test_size=0.1, random_state=42, shuffle=True)
 
 
-# --- 5. LightningModule personnalisé ---
+
 class Segmentor(pl.LightningModule):
     def __init__(self, model):
         super().__init__()
@@ -77,7 +76,6 @@ class Segmentor(pl.LightningModule):
 
 
     def configure_optimizers(self):
-        # ➡️ ICI on utilise AdamW à la place d'Adam
         optimizer = torch.optim.AdamW(self.parameters(), lr=1e-5, weight_decay=1e-2)
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
             optimizer, mode="max", factor=0.5, patience=5, verbose=True
@@ -89,9 +87,9 @@ class Segmentor(pl.LightningModule):
 
 
 
-# --- 6. Chargement modèle + checkpoint proprement ---
+
 model = AC_MambaSeg().cuda()
-ckpt_path = "/content/drive/MyDrive/Copie de ckpt-val_dice=0.9607.ckpt"
+ckpt_path = ""
 ckpt = torch.load(ckpt_path, map_location='cuda')
 
 
@@ -104,7 +102,7 @@ for k, v in ckpt['state_dict'].items():
 model.load_state_dict(new_state_dict)
 
 
-# --- 7. Dataloaders ---
+
 train_loader = DataLoader(
     ISICLoader(x_train, y_train),
     batch_size=4, pin_memory=True, shuffle=True, num_workers=2, drop_last=True, prefetch_factor=8
@@ -115,7 +113,6 @@ val_loader = DataLoader(
 )
 
 
-# --- 8. Callbacks ---
 checkpoint_cb = pl.callbacks.ModelCheckpoint(
     dirpath=SAVE_DIR,
     filename="ckpt-{val_dice:.4f}",
@@ -139,7 +136,6 @@ early_stop_cb = pl.callbacks.EarlyStopping(
 progress_bar = pl.callbacks.TQDMProgressBar()
 
 
-# --- 9. Trainer ---
 trainer = pl.Trainer(
     default_root_dir=SAVE_DIR,
     logger=True,
@@ -153,18 +149,18 @@ trainer = pl.Trainer(
 )
 
 
-# --- 10. Entraînement ---
+
 segmentor = Segmentor(model)
 trainer.fit(segmentor, train_loader, val_loader)
 
 
-# --- 11. Sauvegarde du test set ---
+
 test_save_path = os.path.join(SAVE_DIR, "data.npz")
 np.savez(test_save_path, image=x_test, mask=y_test)
-print(f"✅ Test data saved to {test_save_path}")
+print(f" Test data saved to {test_save_path}")
 
 
-# --- 12. Sauvegarde du modèle final ---
 final_model_path = os.path.join(SAVE_DIR, "model.ckpt")
 trainer.save_checkpoint(final_model_path)
-print(f"✅ Full model saved to {final_model_path}")
+print(f" Full model saved to {final_model_path}")
+
