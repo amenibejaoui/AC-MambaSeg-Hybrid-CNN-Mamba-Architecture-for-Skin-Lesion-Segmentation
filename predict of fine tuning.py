@@ -12,16 +12,13 @@ from torch.utils.data import DataLoader
 from models.AC_MambaSeg import AC_MambaSeg
 
 
-# --- 1. Paths ---
-DATA_PATH = '/content/drive/MyDrive/event/test_data.npz'
-CHECKPOINT_PATH = '/content/drive/MyDrive/event/ckpt-val_dice=0.9674.ckpt'
-SAVE_DIR = '/content/drive/MyDrive/event/predictions'
+
+DATA_PATH = ''
+CHECKPOINT_PATH = ''
+SAVE_DIR = ''
 os.makedirs(SAVE_DIR, exist_ok=True)
 
-
-# --- 2. Load model ---
 model = AC_MambaSeg()
-
 
 class Segmentor(pl.LightningModule):
     def __init__(self, model):
@@ -41,14 +38,10 @@ class Segmentor(pl.LightningModule):
         self.log_dict({"test_dice": dice, "test_iou": iou}, prog_bar=True)
         return {"y_pred": y_pred, "y_true": y_true, "image": image}
 
-
-# --- 3. Load test data ---
 data = np.load(DATA_PATH)
 x_test, y_test = data["image"], data["mask"]
 test_loader = DataLoader(ISICLoader(x_test, y_test, typeData="test"), batch_size=1, num_workers=2, prefetch_factor=8)
 
-
-# --- 4. Load checkpoint ---
 segmentor = Segmentor.load_from_checkpoint(CHECKPOINT_PATH, model=model)
 segmentor.eval()
 segmentor.freeze()
@@ -61,11 +54,8 @@ trainer = pl.Trainer(
 )
 
 
-# --- 6. Run test (logs Dice & IoU) ---
 trainer.test(segmentor, dataloaders=test_loader)
 
-
-# --- 7. Manual prediction & collection for saving/visualization ---
 all_preds, all_gts, all_images = [], [], []
 
 
@@ -79,8 +69,6 @@ for batch in test_loader:
         all_gts.append(gt.squeeze(0).numpy())
         all_images.append(img.squeeze(0).cpu().numpy())
 
-
-# --- 8. Save predictions to .npz ---
 np.savez_compressed(
     os.path.join(SAVE_DIR, "predictions.npz"),
     preds=np.array(all_preds),
@@ -88,3 +76,4 @@ np.savez_compressed(
     images=np.array(all_images)
 )
 print(f"✅ Predictions saved at {SAVE_DIR}/predictions.npz")
+
