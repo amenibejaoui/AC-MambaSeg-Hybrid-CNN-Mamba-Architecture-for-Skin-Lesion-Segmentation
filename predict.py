@@ -11,10 +11,9 @@ from torch.utils.data import DataLoader,Dataset
 from models.AC_MambaSeg import AC_MambaSeg
 
 model = AC_MambaSeg()
-DATA_PATH = '/content/test_data.npz'
-CHECKPOINT_PATH = '/content/weights/ckptval_dice=0.9388.ckpt'
+DATA_PATH = ''
+CHECKPOINT_PATH = ''
 
-# Lightning module
 class Segmentor(pl.LightningModule):
     def __init__(self, model=model):
         super().__init__()
@@ -42,4 +41,5 @@ test_dataset = DataLoader(ISICLoader(x_test, y_test, typeData="test"), batch_siz
 # Prediction
 trainer = pl.Trainer()
 segmentor = Segmentor.load_from_checkpoint(CHECKPOINT_PATH, model = model)
+
 trainer.test(segmentor, test_dataset)
