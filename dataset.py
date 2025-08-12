@@ -5,8 +5,6 @@ from torch.utils.data import Dataset
 from PIL import Image
 import cv2
 
-
-# Custom random crop that works on both image and mask together
 class RandomCrop(transforms.RandomResizedCrop):
     def __call__(self, imgs):
         i, j, h, w = self.get_params(imgs[0], self.scale, self.ratio)
@@ -17,7 +15,6 @@ class RandomCrop(transforms.RandomResizedCrop):
         return imgs
 
 
-# Hair removal preprocessing
 def remove_hair(pil_img):
     """
     Simulated hair removal using OpenCV.
@@ -26,28 +23,18 @@ def remove_hair(pil_img):
     """
     image = np.array(pil_img)
 
-
-    # Convert to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 
 
-    # Black-hair detection using morphological operations
     kernel = cv2.getStructuringElement(1, (17, 17))
     blackhat = cv2.morphologyEx(gray, cv2.MORPH_BLACKHAT, kernel)
 
-
-    # Threshold the blackhat image
     _, thresh = cv2.threshold(blackhat, 10, 255, cv2.THRESH_BINARY)
-
-
-    # Inpaint to remove hair pixels
     inpainted = cv2.inpaint(image, thresh, 1, cv2.INPAINT_TELEA)
 
 
     return Image.fromarray(inpainted)
 
-
-# ISIC segmentation dataset class
 class ISICLoader(Dataset):
     def __init__(self, images, masks, augment=True, typeData="train", size=(256, 256)):
         self.augment = augment if typeData == "train" else False
@@ -105,12 +92,7 @@ class ISICLoader(Dataset):
     def __getitem__(self, idx):
         image = Image.fromarray(self.images[idx])
         mask = Image.fromarray(self.masks[idx])
-
-
-        # Apply hair removal
         image = remove_hair(image)
-
-
         if self.augment:
             image, mask = self.augment_image_mask(image, mask)
         else:
@@ -121,6 +103,7 @@ class ISICLoader(Dataset):
         image = self.to_tensor(image)
         mask = torch.from_numpy(np.array(mask, dtype=np.int64)).unsqueeze(0)
         return image, mask
+
 
 
 
