@@ -10,31 +10,19 @@ from torch.utils.data import DataLoader
 from models.AC_MambaSeg import AC_MambaSeg
 from collections import OrderedDict
 
-
-
-
-
 IN_COLAB = 'google.colab' in sys.modules
-
-
-
 if IN_COLAB:
     from google.colab import drive
     drive.mount('/content/drive')
     SAVE_DIR = ""
 else:
     SAVE_DIR = ""
-
-
 os.makedirs(SAVE_DIR, exist_ok=True)
 
 
 DATA_PATH = '/content/dataset.npz'
 data = np.load(DATA_PATH)
 x, y = data["images"], data["masks"]
-
-
-
 x_trainval, x_test, y_trainval, y_test = train_test_split(x, y, test_size=0.2, random_state=42, shuffle=True)
 x_train, x_val, y_train, y_val = train_test_split(x_trainval, y_trainval, test_size=0.1, random_state=42, shuffle=True)
 
@@ -82,12 +70,6 @@ class Segmentor(pl.LightningModule):
         )
         return {"optimizer": optimizer, "lr_scheduler": scheduler, "monitor": "val_dice"}
 
-
-
-
-
-
-
 model = AC_MambaSeg().cuda()
 ckpt_path = ""
 ckpt = torch.load(ckpt_path, map_location='cuda')
@@ -100,8 +82,6 @@ for k, v in ckpt['state_dict'].items():
 
 
 model.load_state_dict(new_state_dict)
-
-
 
 train_loader = DataLoader(
     ISICLoader(x_train, y_train),
@@ -163,4 +143,5 @@ print(f" Test data saved to {test_save_path}")
 final_model_path = os.path.join(SAVE_DIR, "model.ckpt")
 trainer.save_checkpoint(final_model_path)
 print(f" Full model saved to {final_model_path}")
+
 
