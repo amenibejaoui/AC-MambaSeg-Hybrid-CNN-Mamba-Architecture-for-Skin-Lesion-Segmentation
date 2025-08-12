@@ -33,13 +33,13 @@ class Segmentor(pl.LightningModule):
     
 model.eval()
 
-# Dataset & Data Loader
+
 data = np.load(DATA_PATH)
 x_test, y_test = data["image"], data["mask"]
 test_dataset = DataLoader(ISICLoader(x_test, y_test, typeData="test"), batch_size=1, num_workers=2, prefetch_factor=16)
 
-# Prediction
 trainer = pl.Trainer()
 segmentor = Segmentor.load_from_checkpoint(CHECKPOINT_PATH, model = model)
 
 trainer.test(segmentor, test_dataset)
+
