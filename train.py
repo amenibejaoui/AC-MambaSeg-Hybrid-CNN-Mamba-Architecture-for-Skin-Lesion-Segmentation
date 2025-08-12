@@ -16,15 +16,15 @@ IN_COLAB = 'google.colab' in sys.modules
 if IN_COLAB:
     from google.colab import drive
     drive.mount('/content/drive')
-    SAVE_DIR = "/content/drive/MyDrive/event"
+    SAVE_DIR = ""
 else:
-    SAVE_DIR = "/content/drive/MyDrive/event"
+    SAVE_DIR = ""
 
 # Créer le dossier s’il n’existe pas
 os.makedirs(SAVE_DIR, exist_ok=True)
 
 
-DATA_PATH = '/content/isic18_npz/ISIC2018_train.npz'  
+DATA_PATH = ''  
 data = np.load(DATA_PATH)
 x, y = data["images"], data["masks"]
 
@@ -106,4 +106,5 @@ print(f" Test data saved to {test_save_path}")
 final_model_path = os.path.join(SAVE_DIR, "final_model.ckpt")
 trainer.save_checkpoint(final_model_path)
 print(f"Full model saved to {final_model_path}")
+
 
